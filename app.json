@@ -13,6 +13,7 @@
       "supportsTablet": false
     },
     "android": {
+      "package": "com.tanmay.faceflap",
       "adaptiveIcon": {
         "backgroundColor": "#0d1117",
         "foregroundImage": "./assets/android-icon-foreground.png",
