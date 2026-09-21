@@ -1,5 +1,12 @@
-import { Audio } from 'expo-av';
-import * as Haptics from 'expo-haptics';
+let AudioModule: any = null;
+try {
+  AudioModule = require('expo-av').Audio;
+} catch {}
+
+let HapticsModule: any = null;
+try {
+  HapticsModule = require('expo-haptics');
+} catch {}
 
 /**
  * Generates a clean Base64-encoded PCM 8-bit mono WAV data URI.
@@ -94,20 +101,20 @@ const GAMEOVER_WAV = createWavDataUri(8000, 0.38, (t) => {
 });
 
 class SoundController {
-  private sounds: { [key: string]: Audio.Sound } = {};
+  private sounds: { [key: string]: any } = {};
   private initialized = false;
 
   async init() {
-    if (this.initialized) return;
+    if (this.initialized || !AudioModule) return;
     try {
-      await Audio.setAudioModeAsync({
+      await AudioModule.setAudioModeAsync({
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
         shouldDuckAndroid: true,
       });
 
       const load = async (uri: string) => {
-        const { sound } = await Audio.Sound.createAsync({ uri });
+        const { sound } = await AudioModule.Sound.createAsync({ uri });
         return sound;
       };
 
@@ -126,8 +133,8 @@ class SoundController {
   }
 
   async playFlap(soundEnabled: boolean, hapticsEnabled: boolean) {
-    if (hapticsEnabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (hapticsEnabled && HapticsModule) {
+      HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle?.Light).catch(() => {});
     }
     if (!soundEnabled || !this.sounds.flap) return;
     try {
@@ -136,8 +143,8 @@ class SoundController {
   }
 
   async playPoint(soundEnabled: boolean, hapticsEnabled: boolean) {
-    if (hapticsEnabled) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    if (hapticsEnabled && HapticsModule) {
+      HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Success).catch(() => {});
     }
     if (!soundEnabled || !this.sounds.point) return;
     try {
@@ -146,8 +153,8 @@ class SoundController {
   }
 
   async playHit(soundEnabled: boolean, hapticsEnabled: boolean) {
-    if (hapticsEnabled) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    if (hapticsEnabled && HapticsModule) {
+      HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Error).catch(() => {});
     }
     if (!soundEnabled || !this.sounds.hit) return;
     try {

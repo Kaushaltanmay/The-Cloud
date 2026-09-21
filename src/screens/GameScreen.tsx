@@ -65,6 +65,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const nextObstacleIdRef = useRef<number>(1);
   const animationFrameIdRef = useRef<number | null>(null);
   const gameStateRef = useRef<GameState>('READY');
+  const scoreRef = useRef<number>(0);
   const flapTimeoutRef = useRef<any>(null);
 
   // Keep gameStateRef in sync
@@ -117,6 +118,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     ];
 
     groundOffsetRef.current = 0;
+    scoreRef.current = 0;
     setScore(0);
     setIsNewBest(false);
     setGameState('READY');
@@ -207,17 +209,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           // Score check: passed player center
           if (!obs.passed && obs.x + GAME_CONSTANTS.TOWER_WIDTH < player.x) {
             obs.passed = true;
-            setScore((prevScore) => {
-              const newScore = prevScore + 1;
-              SoundService.playPoint(soundEnabled, hapticsEnabled);
+            scoreRef.current += 1;
+            const currentScore = scoreRef.current;
+            setScore(currentScore);
+            SoundService.playPoint(soundEnabled, hapticsEnabled);
 
-              if (newScore > bestScore) {
-                setIsNewBest(true);
-                onUpdateBestScore(newScore);
-                StorageService.saveBestScore(newScore);
-              }
-              return newScore;
-            });
+            if (currentScore > bestScore) {
+              setIsNewBest(true);
+              onUpdateBestScore(currentScore);
+              StorageService.saveBestScore(currentScore);
+            }
           }
         }
 
