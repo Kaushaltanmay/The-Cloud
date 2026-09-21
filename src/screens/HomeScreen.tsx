@@ -107,14 +107,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {/* Status Indicators */}
         <View style={styles.statusChips}>
-          <View style={[styles.chip, playerFaceUri ? styles.chipActive : styles.chipInactive]}>
+          <View style={[styles.chip, styles.chipActive]}>
             <Ionicons
-              name={playerFaceUri ? 'checkmark-circle' : 'person-circle-outline'}
+              name="checkmark-circle"
               size={13}
-              color={playerFaceUri ? '#10B981' : '#94A3B8'}
+              color="#10B981"
             />
             <Text style={styles.chipText}>
-              Friend 1: {playerFaceUri ? 'Loaded' : 'Default'}
+              Friend 1: Ready
             </Text>
           </View>
 
