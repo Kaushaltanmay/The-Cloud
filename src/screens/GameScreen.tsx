@@ -73,9 +73,28 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     gameStateRef.current = gameState;
   }, [gameState]);
 
+  // Keep prop refs in sync to prevent restarting the game loop
+  const bestScoreRef = useRef(bestScore);
+  const soundEnabledRef = useRef(soundEnabled);
+  const hapticsEnabledRef = useRef(hapticsEnabled);
+  const onUpdateBestScoreRef = useRef(onUpdateBestScore);
+
+  useEffect(() => {
+    bestScoreRef.current = bestScore;
+  }, [bestScore]);
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+  useEffect(() => {
+    hapticsEnabledRef.current = hapticsEnabled;
+  }, [hapticsEnabled]);
+  useEffect(() => {
+    onUpdateBestScoreRef.current = onUpdateBestScore;
+  }, [onUpdateBestScore]);
+
   // Spawn an obstacle pair at a given X position
   const spawnObstaclePair = useCallback((startX: number): ObstaclePair => {
-    const currentScore = score;
+    const currentScore = scoreRef.current;
     const gap = Math.max(
       GAME_CONSTANTS.MIN_GAP_SIZE,
       GAME_CONSTANTS.INITIAL_GAP_SIZE - currentScore * GAME_CONSTANTS.GAP_DECREASE_PER_SCORE
@@ -101,7 +120,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       gapSize: gap,
       passed: false,
     };
-  }, [score]);
+  }, []);
 
   // Reset all game variables for a fresh round
   const resetGame = useCallback(() => {
@@ -122,6 +141,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     setScore(0);
     setIsNewBest(false);
     setGameState('READY');
+    gameStateRef.current = 'READY';
     setRenderTrigger((prev) => prev + 1);
   }, [spawnObstaclePair]);
 
@@ -161,7 +181,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     if (flapTimeoutRef.current) clearTimeout(flapTimeoutRef.current);
     flapTimeoutRef.current = setTimeout(() => setIsFlapping(false), 120);
 
-    SoundService.playFlap(soundEnabled, hapticsEnabled);
+    SoundService.playFlap(soundEnabledRef.current, hapticsEnabledRef.current);
   };
 
   // 60 FPS Game Loop
@@ -177,7 +197,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         const player = playerRef.current;
         const currentSpeed = Math.min(
           GAME_CONSTANTS.MAX_SPEED,
-          GAME_CONSTANTS.BASE_SPEED + score * GAME_CONSTANTS.SPEED_INCREASE_PER_SCORE
+          GAME_CONSTANTS.BASE_SPEED + scoreRef.current * GAME_CONSTANTS.SPEED_INCREASE_PER_SCORE
         );
 
         // 1. Update player physics
@@ -212,11 +232,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             scoreRef.current += 1;
             const currentScore = scoreRef.current;
             setScore(currentScore);
-            SoundService.playPoint(soundEnabled, hapticsEnabled);
+            SoundService.playPoint(soundEnabledRef.current, hapticsEnabledRef.current);
 
-            if (currentScore > bestScore) {
+            if (currentScore > bestScoreRef.current) {
               setIsNewBest(true);
-              onUpdateBestScore(currentScore);
+              onUpdateBestScoreRef.current(currentScore);
               StorageService.saveBestScore(currentScore);
             }
           }
@@ -241,8 +261,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         if (hasCollided) {
           // Crash!
           triggerCameraShake();
-          SoundService.playHit(soundEnabled, hapticsEnabled);
-          SoundService.playGameOver(soundEnabled);
+          SoundService.playHit(soundEnabledRef.current, hapticsEnabledRef.current);
+          SoundService.playGameOver(soundEnabledRef.current);
           setGameState('GAME_OVER');
           gameStateRef.current = 'GAME_OVER';
         }
@@ -265,7 +285,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, [score, bestScore, soundEnabled, hapticsEnabled, onUpdateBestScore, spawnObstaclePair]);
+  }, [spawnObstaclePair]);
 
   return (
     <TouchableWithoutFeedback onPress={handleFlap}>
