@@ -1,7 +1,14 @@
-let AudioModule: any = null;
+import { File, Paths } from 'expo-file-system';
+
+let createAudioPlayer: any = null;
+let setAudioModeAsync: any = null;
 try {
-  AudioModule = require('expo-av').Audio;
-} catch {}
+  const expoAudio = require('expo-audio');
+  createAudioPlayer = expoAudio.createAudioPlayer;
+  setAudioModeAsync = expoAudio.setAudioModeAsync;
+} catch (e) {
+  console.warn('expo-audio not available', e);
+}
 
 let HapticsModule: any = null;
 try {
@@ -9,9 +16,9 @@ try {
 } catch {}
 
 /**
- * Generates a clean Base64-encoded PCM 8-bit mono WAV data URI.
+ * Generates a clean PCM 8-bit mono WAV Uint8Array.
  */
-function createWavDataUri(sampleRate: number, durationSec: number, generator: (t: number) => number): string {
+function createWavBytes(sampleRate: number, durationSec: number, generator: (t: number) => number): Uint8Array {
   const numSamples = Math.floor(sampleRate * durationSec);
   const dataSize = numSamples;
   const bufferSize = 44 + dataSize;
@@ -54,39 +61,25 @@ function createWavDataUri(sampleRate: number, durationSec: number, generator: (t
     bytes[44 + i] = Math.floor((sample + 1) * 127.5);
   }
 
-  // Fast standard base64 encoding without Node Buffer
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let base64 = '';
-  const total = bytes.length;
-  for (let i = 0; i < total; i += 3) {
-    const b1 = bytes[i];
-    const b2 = i + 1 < total ? bytes[i + 1] : 0;
-    const b3 = i + 2 < total ? bytes[i + 2] : 0;
-    const trip = (b1 << 16) | (b2 << 8) | b3;
-    base64 += chars[(trip >> 18) & 63];
-    base64 += chars[(trip >> 12) & 63];
-    base64 += i + 1 < total ? chars[(trip >> 6) & 63] : '=';
-    base64 += i + 2 < total ? chars[trip & 63] : '=';
-  }
-  return `data:audio/wav;base64,${base64}`;
+  return bytes;
 }
 
 // 1. Upward synth flap swoop
-const FLAP_WAV = createWavDataUri(8000, 0.09, (t) => {
+const FLAP_BYTES = createWavBytes(8000, 0.09, (t) => {
   const freq = 360 + (t / 0.09) * 440;
   const envelope = 1 - t / 0.09;
   return Math.sin(2 * Math.PI * freq * t) * envelope;
 });
 
 // 2. High-pitch arcade coin ding
-const POINT_WAV = createWavDataUri(8000, 0.16, (t) => {
+const POINT_BYTES = createWavBytes(8000, 0.16, (t) => {
   const freq = t < 0.07 ? 987 : 1318; // B5 to E6 chime
   const envelope = Math.exp(-t * 12);
   return Math.sin(2 * Math.PI * freq * t) * envelope * 0.9;
 });
 
 // 3. Impact crunch
-const HIT_WAV = createWavDataUri(8000, 0.14, (t) => {
+const HIT_BYTES = createWavBytes(8000, 0.14, (t) => {
   const envelope = Math.exp(-t * 22);
   const noise = (Math.random() * 2 - 1) * 0.6;
   const lowBass = Math.sin(2 * Math.PI * 110 * t) * 0.4;
@@ -94,7 +87,7 @@ const HIT_WAV = createWavDataUri(8000, 0.14, (t) => {
 });
 
 // 4. Descending Game Over jingle
-const GAMEOVER_WAV = createWavDataUri(8000, 0.38, (t) => {
+const GAMEOVER_BYTES = createWavBytes(8000, 0.38, (t) => {
   const freq = Math.max(140, 480 - (t / 0.38) * 320);
   const envelope = Math.exp(-t * 6);
   return Math.sin(2 * Math.PI * freq * t) * envelope;
@@ -105,25 +98,34 @@ class SoundController {
   private initialized = false;
 
   async init() {
-    if (this.initialized || !AudioModule) return;
+    if (this.initialized || !createAudioPlayer) return;
     try {
-      await AudioModule.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-      });
+      if (setAudioModeAsync) {
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: false,
+        }).catch(() => {});
+      }
 
-      const load = async (uri: string) => {
-        const { sound } = await AudioModule.Sound.createAsync({ uri });
-        return sound;
+      const saveWav = (filename: string, bytes: Uint8Array) => {
+        try {
+          const file = new File(Paths.cache, filename);
+          file.write(bytes);
+          return file.uri;
+        } catch {
+          return null;
+        }
       };
 
-      const [flap, point, hit, over] = await Promise.all([
-        load(FLAP_WAV),
-        load(POINT_WAV),
-        load(HIT_WAV),
-        load(GAMEOVER_WAV),
-      ]);
+      const flapUri = saveWav('flap.wav', FLAP_BYTES);
+      const pointUri = saveWav('point.wav', POINT_BYTES);
+      const hitUri = saveWav('hit.wav', HIT_BYTES);
+      const overUri = saveWav('over.wav', GAMEOVER_BYTES);
+
+      const flap = flapUri ? createAudioPlayer({ uri: flapUri }) : null;
+      const point = pointUri ? createAudioPlayer({ uri: pointUri }) : null;
+      const hit = hitUri ? createAudioPlayer({ uri: hitUri }) : null;
+      const over = overUri ? createAudioPlayer({ uri: overUri }) : null;
 
       this.sounds = { flap, point, hit, over };
       this.initialized = true;
@@ -134,45 +136,55 @@ class SoundController {
 
   async playFlap(soundEnabled: boolean, hapticsEnabled: boolean) {
     if (hapticsEnabled && HapticsModule) {
-      HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle?.Light).catch(() => {});
+      try {
+        HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle?.Light).catch(() => {});
+      } catch {}
     }
     if (!soundEnabled || !this.sounds.flap) return;
     try {
-      await this.sounds.flap.replayAsync();
+      this.sounds.flap.seekTo(0).catch(() => {});
+      this.sounds.flap.play();
     } catch {}
   }
 
   async playPoint(soundEnabled: boolean, hapticsEnabled: boolean) {
     if (hapticsEnabled && HapticsModule) {
-      HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Success).catch(() => {});
+      try {
+        HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Success).catch(() => {});
+      } catch {}
     }
     if (!soundEnabled || !this.sounds.point) return;
     try {
-      await this.sounds.point.replayAsync();
+      this.sounds.point.seekTo(0).catch(() => {});
+      this.sounds.point.play();
     } catch {}
   }
 
   async playHit(soundEnabled: boolean, hapticsEnabled: boolean) {
     if (hapticsEnabled && HapticsModule) {
-      HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Error).catch(() => {});
+      try {
+        HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType?.Error).catch(() => {});
+      } catch {}
     }
     if (!soundEnabled || !this.sounds.hit) return;
     try {
-      await this.sounds.hit.replayAsync();
+      this.sounds.hit.seekTo(0).catch(() => {});
+      this.sounds.hit.play();
     } catch {}
   }
 
   async playGameOver(soundEnabled: boolean) {
     if (!soundEnabled || !this.sounds.over) return;
     try {
-      await this.sounds.over.replayAsync();
+      this.sounds.over.seekTo(0).catch(() => {});
+      this.sounds.over.play();
     } catch {}
   }
 
   async cleanup() {
     for (const key of Object.keys(this.sounds)) {
       try {
-        await this.sounds[key].unloadAsync();
+        this.sounds[key]?.remove?.();
       } catch {}
     }
     this.sounds = {};
