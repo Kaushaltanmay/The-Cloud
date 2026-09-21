@@ -118,14 +118,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </Text>
           </View>
 
-          <View style={[styles.chip, obstacleFaceUri ? styles.chipActive : styles.chipInactive]}>
+          <View style={[styles.chip, styles.chipActive]}>
             <Ionicons
-              name={obstacleFaceUri ? 'checkmark-circle' : 'layers-outline'}
+              name="checkmark-circle"
               size={13}
-              color={obstacleFaceUri ? '#EF4444' : '#94A3B8'}
+              color="#EF4444"
             />
             <Text style={styles.chipText}>
-              Friend 2: {obstacleFaceUri ? 'Loaded' : 'Default'}
+              Friend 2: Ready
             </Text>
           </View>
         </View>
