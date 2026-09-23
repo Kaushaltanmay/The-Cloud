@@ -5,12 +5,17 @@ import {
   Text,
   TouchableOpacity,
   Animated,
-  Image,
+  ImageBackground,
+  StatusBar,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DEFAULT_FRIEND_1_URI } from '../assets/placeholders/defaultFaces';
-import { GAME_CONSTANTS } from '../game/constants';
+import { WeddingButton } from '../components/wedding/WeddingButton';
+import { WeddingLights } from '../components/wedding/WeddingLights';
+import { PetalLayer } from '../components/wedding/PetalLayer';
+
+const WEDDING_SCENE_BG = require('../assets/wedding/wedding_scene.jpg');
 
 interface HomeScreenProps {
   bestScore: number;
@@ -25,8 +30,6 @@ interface HomeScreenProps {
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   bestScore,
-  playerFaceUri,
-  obstacleFaceUri,
   soundEnabled,
   onToggleSound,
   onPlay,
@@ -34,135 +37,187 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onHowToPlay,
 }) => {
   const insets = useSafeAreaInsets();
-  const bobAnim = useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
 
-  // Idle floating animation for the face
+  // Entrance animations
+  const headerFadeAnim = useRef(new Animated.Value(0)).current;
+  const buttonsRiseAnim = useRef(new Animated.Value(60)).current;
+  const buttonsFadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Title sheen animation
+  const shineAnim = useRef(new Animated.Value(-160)).current;
+
   useEffect(() => {
-    const loop = Animated.loop(
+    // 1. Top bar fade in
+    Animated.timing(headerFadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    // 2. Buttons slide up & fade in after slight delay
+    Animated.parallel([
+      Animated.timing(buttonsFadeAnim, {
+        toValue: 1,
+        duration: 650,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(buttonsRiseAnim, {
+        toValue: 0,
+        tension: 40,
+        friction: 8,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // 3. Periodic golden shine sweep across the title at top
+    const shineLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(bobAnim, {
-          toValue: -12,
-          duration: 900,
+        Animated.delay(2200),
+        Animated.timing(shineAnim, {
+          toValue: width + 80,
+          duration: 1100,
           useNativeDriver: true,
         }),
-        Animated.timing(bobAnim, {
-          toValue: 0,
-          duration: 900,
+        Animated.timing(shineAnim, {
+          toValue: -160,
+          duration: 0,
           useNativeDriver: true,
         }),
       ])
     );
-    loop.start();
-    return () => loop.stop();
-  }, [bobAnim]);
+    shineLoop.start();
 
-  const playerImageSource = playerFaceUri
-    ? { uri: playerFaceUri }
-    : { uri: DEFAULT_FRIEND_1_URI };
+    return () => {
+      shineLoop.stop();
+    };
+  }, [headerFadeAnim, buttonsFadeAnim, buttonsRiseAnim, shineAnim, width]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      {/* Top Header: Sound & Settings */}
-      <View style={styles.topBar}>
-        <View style={styles.bestScorePill}>
-          <Ionicons name="trophy" size={16} color="#FBBF24" />
-          <Text style={styles.bestScoreText}>BEST: {bestScore}</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* Main Wedding Mandap Scene Background */}
+      <ImageBackground
+        source={WEDDING_SCENE_BG}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        {/* Subtle dark gradient overlay to ensure contrast and luxury mood */}
+        <View style={styles.ambientOverlay} pointerEvents="none" />
+
+        {/* Twinkling Golden Bokeh Fairy Lights */}
+        <WeddingLights />
+
+        {/* Falling Rose and Marigold Petals */}
+        <PetalLayer />
+
+        {/* Dynamic Golden Shine Sweep over the title area */}
+        <View
+          style={[
+            styles.titleShineContainer,
+            { top: Math.max(insets.top, 16) + 10 },
+          ]}
+          pointerEvents="none"
+        >
+          <Animated.View
+            style={[
+              styles.shineBar,
+              {
+                transform: [
+                  { translateX: shineAnim },
+                  { rotate: '25deg' },
+                ],
+              },
+            ]}
+          />
         </View>
 
-        <TouchableOpacity
-          style={styles.circleBtn}
-          onPress={onToggleSound}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={soundEnabled ? 'volume-high' : 'volume-mute'}
-            size={20}
-            color="#E2E8F0"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Hero Center Section */}
-      <View style={styles.heroSection}>
-        {/* Floating Player Face Preview */}
-        <Animated.View
+        {/* Foreground Content Container */}
+        <View
           style={[
-            styles.facePreviewWrapper,
-            { transform: [{ translateY: bobAnim }] },
+            styles.foreground,
+            {
+              paddingTop: Math.max(insets.top, 16) + 4,
+              paddingBottom: Math.max(insets.bottom, 16) + 6,
+            },
           ]}
         >
-          <View style={styles.glowRing} />
-          <View style={styles.faceCircle}>
-            <Image source={playerImageSource} style={styles.faceImage} />
-          </View>
-        </Animated.View>
+          {/* Top Header: High Score Trophy & Sound Toggle */}
+          <Animated.View
+            style={[
+              styles.topBar,
+              {
+                opacity: headerFadeAnim,
+                transform: [
+                  {
+                    translateY: headerFadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-15, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.bestScorePill}>
+              <Ionicons name="trophy" size={17} color="#FBBF24" />
+              <Text style={styles.bestScoreText}>BEST: {bestScore}</Text>
+            </View>
 
-        {/* Game Title */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>FACE FLAP</Text>
-          <Text style={styles.subtitle}>
-            “Your friend's face. Your friend's obstacles.”
-          </Text>
-        </View>
+            <TouchableOpacity
+              style={styles.circleBtn}
+              onPress={onToggleSound}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name={soundEnabled ? 'volume-high' : 'volume-mute'}
+                size={20}
+                color="#FEF3C7"
+              />
+            </TouchableOpacity>
+          </Animated.View>
 
-        {/* Status Indicators */}
-        <View style={styles.statusChips}>
-          <View style={[styles.chip, styles.chipActive]}>
-            <Ionicons
-              name="checkmark-circle"
-              size={13}
-              color="#10B981"
+          {/* Spacer: allows the authentic couple & mandap to be fully visible and unobstructed */}
+          <View style={styles.coupleSpacer} pointerEvents="none" />
+
+          {/* Bottom Action Menu: PLAY, CUSTOMIZE, HOW TO PLAY */}
+          <Animated.View
+            style={[
+              styles.menuContainer,
+              {
+                opacity: buttonsFadeAnim,
+                transform: [{ translateY: buttonsRiseAnim }],
+              },
+            ]}
+          >
+            {/* Primary PLAY Button */}
+            <WeddingButton
+              variant="play"
+              title="PLAY"
+              onPress={onPlay}
+              style={styles.buttonSpacing}
             />
-            <Text style={styles.chipText}>
-              Friend 1: Ready
-            </Text>
-          </View>
 
-          <View style={[styles.chip, styles.chipActive]}>
-            <Ionicons
-              name="checkmark-circle"
-              size={13}
-              color="#EF4444"
+            {/* CUSTOMIZE Button */}
+            <WeddingButton
+              variant="customize"
+              title="CUSTOMIZE"
+              onPress={onCustomize}
+              style={styles.buttonSpacing}
             />
-            <Text style={styles.chipText}>
-              Friend 2: Ready
-            </Text>
-          </View>
+
+            {/* HOW TO PLAY Button */}
+            <WeddingButton
+              variant="howToPlay"
+              title="HOW TO PLAY"
+              onPress={onHowToPlay}
+            />
+          </Animated.View>
         </View>
-      </View>
-
-      {/* Menu Action Buttons */}
-      <View style={styles.menuButtons}>
-        {/* PLAY BUTTON */}
-        <TouchableOpacity
-          style={[styles.menuBtn, styles.playBtn]}
-          onPress={onPlay}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="play" size={24} color="#FFFFFF" />
-          <Text style={styles.playBtnText}>PLAY</Text>
-        </TouchableOpacity>
-
-        {/* CUSTOMIZE BUTTON */}
-        <TouchableOpacity
-          style={[styles.menuBtn, styles.secondaryBtn]}
-          onPress={onCustomize}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="images-outline" size={20} color="#818CF8" />
-          <Text style={styles.secondaryBtnText}>CUSTOMIZE</Text>
-        </TouchableOpacity>
-
-        {/* HOW TO PLAY BUTTON */}
-        <TouchableOpacity
-          style={[styles.menuBtn, styles.tertiaryBtn]}
-          onPress={onHowToPlay}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="help-circle-outline" size={20} color="#94A3B8" />
-          <Text style={styles.tertiaryBtnText}>HOW TO PLAY</Text>
-        </TouchableOpacity>
-      </View>
+      </ImageBackground>
     </View>
   );
 };
@@ -170,172 +225,95 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090D16',
+    backgroundColor: '#1E040D',
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  ambientOverlay: {
+    ...(StyleSheet.absoluteFill as any),
+    backgroundColor: 'rgba(20, 4, 10, 0.12)',
+  },
+  titleShineContainer: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    height: 190,
+    overflow: 'hidden',
+    zIndex: 5,
+  },
+  shineBar: {
+    width: 38,
+    height: 350,
+    position: 'absolute',
+    top: -80,
+    backgroundColor: 'rgba(255, 255, 230, 0.32)',
+    shadowColor: '#FFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+  },
+  foreground: {
+    flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
+    zIndex: 10,
   },
   bestScorePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.35)',
+    backgroundColor: 'rgba(46, 6, 20, 0.82)',
+    paddingHorizontal: 15,
+    paddingVertical: 7,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(251, 191, 36, 0.65)',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 5,
+    elevation: 4,
     gap: 8,
   },
   bestScoreText: {
-    color: '#FBBF24',
+    color: '#FEF3C7',
     fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   circleBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heroSection: {
-    alignItems: 'center',
-    gap: 18,
-  },
-  facePreviewWrapper: {
-    width: 100,
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  glowRing: {
-    ...(StyleSheet.absoluteFill as any),
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#6366F1',
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  faceCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    overflow: 'hidden',
-    backgroundColor: '#1E293B',
-  },
-  faceImage: {
-    width: '100%',
-    height: '100%',
-  },
-  titleContainer: {
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 44,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 3,
-    textShadowColor: 'rgba(99, 102, 241, 0.8)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 14,
-  },
-  subtitle: {
-    color: '#94A3B8',
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 20,
-  },
-  statusChips: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  chipActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  chipInactive: {
-    backgroundColor: 'rgba(148, 163, 184, 0.1)',
-    borderColor: 'rgba(148, 163, 184, 0.2)',
-  },
-  chipText: {
-    color: '#CBD5E1',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  menuButtons: {
-    width: '100%',
-    gap: 12,
-    marginBottom: 8,
-  },
-  menuBtn: {
-    width: '100%',
-    height: 56,
-    borderRadius: 18,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  playBtn: {
-    backgroundColor: '#6366F1',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  playBtnText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 2,
-  },
-  secondaryBtn: {
-    backgroundColor: '#0F172A',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(46, 6, 20, 0.82)',
     borderWidth: 1.5,
-    borderColor: '#3730A3',
+    borderColor: 'rgba(251, 191, 36, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 5,
+    elevation: 4,
   },
-  secondaryBtnText: {
-    color: '#E2E8F0',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+  coupleSpacer: {
+    flex: 1,
   },
-  tertiaryBtn: {
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+  menuContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    marginBottom: 4,
   },
-  tertiaryBtnText: {
-    color: '#94A3B8',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
+  buttonSpacing: {
+    marginBottom: 11,
   },
 });
