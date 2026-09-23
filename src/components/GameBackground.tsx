@@ -9,49 +9,54 @@ interface GameBackgroundProps {
 export const GameBackground: React.FC<GameBackgroundProps> = ({ groundOffset }) => {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* 1. Deep arcade sky gradient layers */}
+      {/* 1. Deep royal wedding evening twilight sky */}
       <View style={styles.skyGradientTop} />
       <View style={styles.skyGradientBottom} />
 
-      {/* 2. Distant floating stars */}
-      <View style={[styles.star, { top: '12%', left: '15%' }]} />
-      <View style={[styles.star, { top: '22%', left: '75%' }]} />
-      <View style={[styles.star, { top: '18%', left: '45%', width: 4, height: 4 }]} />
-      <View style={[styles.star, { top: '35%', left: '88%' }]} />
-      <View style={[styles.star, { top: '42%', left: '25%' }]} />
-      <View style={[styles.star, { top: '50%', left: '60%', width: 5, height: 5 }]} />
+      {/* 2. Twinkling Golden Fairy Lights & Bokeh Stars */}
+      <View style={[styles.fairyLight, { top: '10%', left: '12%', width: 7, height: 7 }]} />
+      <View style={[styles.fairyLight, { top: '18%', left: '78%', width: 10, height: 10 }]} />
+      <View style={[styles.fairyLight, { top: '14%', left: '48%', width: 6, height: 6 }]} />
+      <View style={[styles.fairyLight, { top: '28%', left: '88%', width: 8, height: 8 }]} />
+      <View style={[styles.fairyLight, { top: '34%', left: '22%', width: 9, height: 9 }]} />
+      <View style={[styles.fairyLight, { top: '44%', left: '65%', width: 7, height: 7 }]} />
+      <View style={[styles.fairyLight, { top: '52%', left: '14%', width: 8, height: 8 }]} />
+      <View style={[styles.fairyLight, { top: '58%', left: '82%', width: 6, height: 6 }]} />
 
-      {/* 3. Distant City Skyline Silhouette */}
-      <View style={styles.skyline}>
-        <View style={[styles.building, { width: 34, height: 110, left: 20 }]} />
-        <View style={[styles.building, { width: 48, height: 145, left: 65 }]} />
-        <View style={[styles.building, { width: 40, height: 85, left: 125 }]} />
-        <View style={[styles.building, { width: 52, height: 160, left: 180 }]} />
-        <View style={[styles.building, { width: 38, height: 120, left: 245 }]} />
-        <View style={[styles.building, { width: 45, height: 140, left: 295 }]} />
-        <View style={[styles.building, { width: 55, height: 95, left: 350 }]} />
+      {/* 3. Subtle Mandap Arch Silhouette in the distance */}
+      <View style={styles.mandapSilhouette}>
+        <View style={styles.mandapPillarLeft} />
+        <View style={styles.mandapDome} />
+        <View style={styles.mandapPillarRight} />
       </View>
 
-      {/* 4. Scrolling Ground & Neon Strip */}
+      {/* 4. Festive Scrolling Wedding Stage Ground */}
       <View style={styles.groundContainer}>
-        {/* Neon laser border separating ground and sky */}
-        <View style={styles.neonGroundLine} />
-        
-        {/* Ground body with repeating stripes */}
+        {/* Golden laser border separating ground and sky */}
+        <View style={styles.goldenGroundLine} />
+
+        {/* Marigold Petal Trim Line */}
+        <View style={styles.marigoldTrim}>
+          {Array.from({ length: 28 }).map((_, i) => (
+            <View key={`petal-${i}`} style={styles.marigoldDot} />
+          ))}
+        </View>
+
+        {/* Scrolling Pattern with Festive Wedding Chevrons */}
         <View
           style={[
             styles.scrollingPattern,
-            { transform: [{ translateX: -((groundOffset * 1.5) % 40) }] },
+            { transform: [{ translateX: -((groundOffset * 1.5) % 36) }] },
           ]}
         >
-          {Array.from({ length: 25 }).map((_, i) => (
+          {Array.from({ length: 32 }).map((_, i) => (
             <View key={`stripe-${i}`} style={styles.groundStripe} />
           ))}
         </View>
 
         {/* Footer text */}
         <View style={styles.groundLabelContainer}>
-          <Text style={styles.groundLabel}>FACE FLAP ARCADE</Text>
+          <Text style={styles.groundLabel}>✨ SHRUTO & ABHIKASHO KI SHAADI ✨</Text>
         </View>
       </View>
     </View>
@@ -64,37 +69,63 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: '60%',
-    backgroundColor: '#090D16',
+    height: '55%',
+    backgroundColor: '#1F030E',
   },
   skyGradientBottom: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '40%',
-    backgroundColor: '#111827',
+    height: '45%',
+    backgroundColor: '#120208',
   },
-  star: {
+  fairyLight: {
     position: 'absolute',
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: '#E2E8F0',
-    opacity: 0.75,
+    borderRadius: 10,
+    backgroundColor: '#FDE68A',
+    opacity: 0.65,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
-  skyline: {
+  mandapSilhouette: {
     position: 'absolute',
     bottom: GAME_CONSTANTS.GROUND_HEIGHT,
     left: 0,
     right: 0,
-    height: 180,
-    opacity: 0.25,
+    height: 140,
+    opacity: 0.22,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
-  building: {
+  mandapDome: {
+    width: 140,
+    height: 70,
+    borderTopLeftRadius: 70,
+    borderTopRightRadius: 70,
+    backgroundColor: '#831843',
+    position: 'absolute',
+    bottom: 50,
+  },
+  mandapPillarLeft: {
     position: 'absolute',
     bottom: 0,
-    backgroundColor: '#3730A3',
+    left: '28%',
+    width: 20,
+    height: 85,
+    backgroundColor: '#701A75',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+  },
+  mandapPillarRight: {
+    position: 'absolute',
+    bottom: 0,
+    right: '28%',
+    width: 20,
+    height: 85,
+    backgroundColor: '#701A75',
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
   },
@@ -104,42 +135,54 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: GAME_CONSTANTS.GROUND_HEIGHT,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#260410',
     overflow: 'hidden',
-    borderTopWidth: 1,
-    borderColor: '#312E81',
+    borderTopWidth: 2,
+    borderColor: '#F59E0B',
     zIndex: 15,
   },
-  neonGroundLine: {
+  goldenGroundLine: {
     height: 4,
-    backgroundColor: '#10B981', // Neon green laser ground
-    shadowColor: '#10B981',
+    backgroundColor: '#F59E0B',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.9,
     shadowRadius: 6,
     elevation: 4,
   },
+  marigoldTrim: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingVertical: 2,
+  },
+  marigoldDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FBBF24',
+  },
   scrollingPattern: {
     flexDirection: 'row',
     width: 1200,
-    height: 30,
-    marginTop: 4,
+    height: 25,
+    marginTop: 2,
   },
   groundStripe: {
-    width: 20,
+    width: 18,
     height: '100%',
-    borderRightWidth: 3,
-    borderColor: '#1E293B',
+    borderRightWidth: 2.5,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
     transform: [{ skewX: '-30deg' }],
   },
   groundLabelContainer: {
     position: 'absolute',
-    bottom: 8,
+    bottom: 7,
     width: '100%',
     alignItems: 'center',
   },
   groundLabel: {
-    color: '#475569',
+    color: '#FDE68A',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 2,

@@ -17,8 +17,24 @@ import { FaceObstacle } from '../components/FaceObstacle';
 import { GameBackground } from '../components/GameBackground';
 import { GameHUD } from '../components/GameHUD';
 import { GameOverModal } from '../components/GameOverModal';
+import { WeddingPopupMessage } from '../components/wedding/WeddingPopup';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const FUNNY_POPUP_MESSAGES = [
+  '💕 Shruto approved!',
+  '😂 Abhikasho is trying his best...',
+  '💀 Bhai, shaadi mein itna easy nahi hai!',
+  '💍 Rishta level: DANGEROUS!',
+  '👰 Bride is watching your flaps...',
+  '👵 "Beta, salary kitni hai?"',
+  '👩 "Ladki wale gate par aa gaye!"',
+  '🥁 DJ wale babu played Nagin music!',
+  '🍛 Gulab jamun shortage detected!',
+  '🕺 Baraat approaching the mandap!',
+  '🔥 Flap speed: Pandit approved!',
+  '❤️ Shaadi meter: OVER 9000!',
+];
 
 interface GameScreenProps {
   playerFaceUri: string | null;
@@ -46,8 +62,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [gameState, setGameState] = useState<GameState>('READY');
   const [score, setScore] = useState<number>(0);
   const [isNewBest, setIsNewBest] = useState<boolean>(false);
-  const [renderTrigger, setRenderTrigger] = useState<number>(0);
+  const [, setRenderTrigger] = useState<number>(0);
   const [isFlapping, setIsFlapping] = useState<boolean>(false);
+  const [popupMessage, setPopupMessage] = useState<WeddingPopupMessage | null>(null);
 
   // Screen shake animation for collision impact
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -140,6 +157,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     scoreRef.current = 0;
     setScore(0);
     setIsNewBest(false);
+    setPopupMessage(null);
     setGameState('READY');
     gameStateRef.current = 'READY';
     setRenderTrigger((prev) => prev + 1);
@@ -234,6 +252,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             setScore(currentScore);
             SoundService.playPoint(soundEnabledRef.current, hapticsEnabledRef.current);
 
+            // Trigger funny popup at milestones or every 3-4 points
+            if (currentScore === 2 || currentScore % 3 === 0) {
+              const randomIndex = Math.floor(Math.random() * FUNNY_POPUP_MESSAGES.length);
+              setPopupMessage({
+                id: Date.now(),
+                text: FUNNY_POPUP_MESSAGES[randomIndex],
+              });
+            }
+
             if (currentScore > bestScoreRef.current) {
               setIsNewBest(true);
               onUpdateBestScoreRef.current(currentScore);
@@ -270,7 +297,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         // Request re-render for visual elements
         setRenderTrigger((prev) => prev + 1);
       } else if (gameStateRef.current === 'READY') {
-        // Gentle bobbing hover while waiting for first tap
+        // Gentle hover while waiting for first tap
         groundOffsetRef.current += 1;
         setRenderTrigger((prev) => prev + 1);
       }
@@ -300,7 +327,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         {/* Background & Scrolling Ground */}
         <GameBackground groundOffset={groundOffsetRef.current} />
 
-        {/* Obstacle Face Towers */}
+        {/* Obstacle Face Towers (Mandap Pillars) */}
         {obstaclesRef.current.map((obs) => (
           <FaceObstacle
             key={`obs-${obs.id}`}
@@ -318,7 +345,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           isFlapping={isFlapping}
         />
 
-        {/* In-Game HUD (Score, Best, Pause, Sound) */}
+        {/* In-Game HUD (Score, Best, Pause, Sound, WeddingPopup) */}
         <GameHUD
           score={score}
           bestScore={bestScore}
@@ -327,14 +354,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           onPause={() => setGameState('PAUSED')}
           isPaused={gameState === 'PAUSED'}
           onResume={() => setGameState('PLAYING')}
+          popupMessage={popupMessage}
         />
 
-        {/* Ready State Overlay */}
+        {/* Ready State Wedding Prompt Overlay */}
         {gameState === 'READY' && (
           <View style={styles.readyPromptContainer} pointerEvents="none">
             <View style={styles.readyBadge}>
-              <Text style={styles.readyTitle}>TAP TO FLAP</Text>
-              <Text style={styles.readySubtitle}>Avoid Friend 2's Face Towers!</Text>
+              <Text style={styles.readyTitle}>TAP TO FLAP 💍</Text>
+              <Text style={styles.readySubtitle}>
+                Reach the Mandap! Dodge Abhikasho's towers!
+              </Text>
             </View>
           </View>
         )}
@@ -343,15 +373,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         {gameState === 'PAUSED' && (
           <View style={styles.pausedOverlay}>
             <View style={styles.pauseCard}>
-              <Text style={styles.pauseTitle}>PAUSED</Text>
+              <Text style={styles.pauseTitle}>⏸️ SHAADI PAUSED</Text>
               <TouchableWithoutFeedback onPress={() => setGameState('PLAYING')}>
                 <View style={styles.resumeBtn}>
-                  <Text style={styles.resumeBtnText}>RESUME</Text>
+                  <Text style={styles.resumeBtnText}>RESUME FLAPPING</Text>
                 </View>
               </TouchableWithoutFeedback>
               <TouchableWithoutFeedback onPress={onMainMenu}>
                 <View style={styles.menuBtn}>
-                  <Text style={styles.menuBtnText}>QUIT TO MENU</Text>
+                  <Text style={styles.menuBtnText}>QUIT TO MANDAP</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -377,46 +407,51 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#090D16',
+    backgroundColor: '#1E040D',
     overflow: 'hidden',
   },
   readyPromptContainer: {
     position: 'absolute',
-    top: '30%',
+    top: '32%',
     left: 0,
     right: 0,
     alignItems: 'center',
     zIndex: 40,
+    paddingHorizontal: 20,
   },
   readyBadge: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    paddingHorizontal: 24,
+    backgroundColor: 'rgba(38, 4, 16, 0.92)',
+    paddingHorizontal: 22,
     paddingVertical: 14,
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 2,
-    borderColor: '#6366F1',
+    borderColor: '#F59E0B',
     alignItems: 'center',
-    shadowColor: '#6366F1',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
     shadowRadius: 10,
     elevation: 8,
   },
   readyTitle: {
-    color: '#FFFFFF',
+    color: '#FEF3C7',
     fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 2,
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(217, 27, 92, 0.85)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
   readySubtitle: {
-    color: '#94A3B8',
+    color: '#FDE68A',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 4,
+    textAlign: 'center',
   },
   pausedOverlay: {
     ...(StyleSheet.absoluteFill as any),
-    backgroundColor: 'rgba(3, 7, 18, 0.85)',
+    backgroundColor: 'rgba(20, 2, 8, 0.88)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
@@ -424,47 +459,56 @@ const styles = StyleSheet.create({
   },
   pauseCard: {
     width: '100%',
-    maxWidth: 300,
-    backgroundColor: '#0F172A',
+    maxWidth: 310,
+    backgroundColor: 'rgba(38, 4, 16, 0.96)',
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#3730A3',
+    borderColor: '#F59E0B',
     padding: 24,
     alignItems: 'center',
     gap: 14,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 10,
   },
   pauseTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 2,
-    marginBottom: 6,
+    color: '#FEF3C7',
+    letterSpacing: 1.5,
+    marginBottom: 4,
   },
   resumeBtn: {
     width: '100%',
-    height: 50,
-    backgroundColor: '#6366F1',
-    borderRadius: 14,
+    height: 48,
+    backgroundColor: '#D91B5C',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   resumeBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
     letterSpacing: 1,
   },
   menuBtn: {
     width: '100%',
     height: 46,
-    backgroundColor: '#1E293B',
-    borderRadius: 14,
+    backgroundColor: 'rgba(20, 2, 8, 0.85)',
+    borderRadius: 23,
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   menuBtnText: {
-    color: '#94A3B8',
-    fontSize: 14,
+    color: '#FDE68A',
+    fontSize: 13,
     fontWeight: '700',
   },
 });

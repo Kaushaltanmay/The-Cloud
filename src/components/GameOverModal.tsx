@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -11,6 +11,50 @@ interface GameOverModalProps {
   onMainMenu: () => void;
 }
 
+interface WeddingEnding {
+  emoji: string;
+  title: string;
+  subtitle: string;
+}
+
+const WEDDING_ENDINGS: WeddingEnding[] = [
+  {
+    emoji: '😭',
+    title: 'Shaadi Cancel Ho Gayi!',
+    subtitle: 'Pandit ji packed his bags and caught the first train back home.',
+  },
+  {
+    emoji: '💀',
+    title: 'Abhikasho Missed The Baraat!',
+    subtitle: 'The decorated ghodi has galloped away alone into the sunset.',
+  },
+  {
+    emoji: '🚨',
+    title: 'Sasural Detected Your Flap!',
+    subtitle: 'High alert issued by Rishtedaar Task Force. RUN! 🏃💨',
+  },
+  {
+    emoji: '💔',
+    title: 'Shruto Has Left The Mandap!',
+    subtitle: 'Bride demanded minimum 10/10 flap skills for the varmala.',
+  },
+  {
+    emoji: '🥁',
+    title: 'BARAAT HAS STOPPED!',
+    subtitle: 'DJ wale babu pulled the aux cable and took the sound system away.',
+  },
+  {
+    emoji: '👵',
+    title: 'Rishta Rejected By Buaji!',
+    subtitle: 'Salary slip and flap stamina could not be verified by elders.',
+  },
+  {
+    emoji: '🍛',
+    title: 'Gulab Jamun Finished First!',
+    subtitle: 'Angry Fufaji spotted storming out of the wedding banquet.',
+  },
+];
+
 export const GameOverModal: React.FC<GameOverModalProps> = ({
   score,
   bestScore,
@@ -19,64 +63,78 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   onCustomize,
   onMainMenu,
 }) => {
+  // Pick a random funny ending on mount
+  const ending = useMemo(() => {
+    const randomIndex = Math.floor(Math.random() * WEDDING_ENDINGS.length);
+    return WEDDING_ENDINGS[randomIndex];
+  }, []);
+
   return (
     <View style={styles.overlay}>
       <View style={styles.card}>
-        {/* Title */}
-        <Text style={styles.gameOverTitle}>GAME OVER</Text>
+        {/* Top Disaster Emoji */}
+        <Text style={styles.disasterEmoji}>{ending.emoji}</Text>
+
+        {/* Funny Ending Title */}
+        <Text style={styles.gameOverTitle}>{ending.title}</Text>
+
+        {/* Funny Ending Subtitle */}
+        <Text style={styles.gameOverSubtitle}>{ending.subtitle}</Text>
 
         {/* New Record Banner */}
-        {isNewBest && (
+        {isNewBest ? (
           <View style={styles.newBestBadge}>
-            <Text style={styles.newBestText}>NEW BEST! 🎉</Text>
+            <Text style={styles.newBestText}>
+              🔥 Ab Toh Shaadi Pakki Hai! Family WhatsApp Par Share Karo! 🎉
+            </Text>
           </View>
-        )}
+        ) : null}
 
         {/* Score Board Box */}
         <View style={styles.scoreBoard}>
           <View style={styles.scoreRow}>
-            <Text style={styles.scoreLabel}>SCORE</Text>
+            <Text style={styles.scoreLabel}>💍 LOVE SCORE</Text>
             <Text style={styles.scoreValue}>{score}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.scoreRow}>
-            <Text style={styles.scoreLabel}>BEST</Text>
+            <Text style={styles.scoreLabel}>🏆 BEST RECORD</Text>
             <Text style={[styles.scoreValue, styles.bestValue]}>
               {bestScore}
             </Text>
           </View>
         </View>
 
-        {/* Buttons List */}
+        {/* Action Buttons */}
         <View style={styles.buttonsContainer}>
-          {/* PLAY AGAIN */}
+          {/* TRY AGAIN / EK AUR CHANCE */}
           <TouchableOpacity
-            style={[styles.btn, styles.playAgainBtn]}
+            style={[styles.btn, styles.tryAgainBtn]}
             onPress={onPlayAgain}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <Ionicons name="reload" size={20} color="#FFFFFF" />
-            <Text style={styles.playAgainBtnText}>PLAY AGAIN</Text>
+            <Text style={styles.tryAgainBtnText}>💍 EK AUR CHANCE (TRY AGAIN)</Text>
           </TouchableOpacity>
 
           {/* CUSTOMIZE */}
           <TouchableOpacity
-            style={[styles.btn, styles.secondaryBtn]}
+            style={[styles.btn, styles.customizeBtn]}
             onPress={onCustomize}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Ionicons name="images-outline" size={18} color="#93C5FD" />
-            <Text style={styles.secondaryBtnText}>CUSTOMIZE</Text>
+            <Ionicons name="sparkles" size={18} color="#831843" />
+            <Text style={styles.customizeBtnText}>CUSTOMIZE LOOK</Text>
           </TouchableOpacity>
 
           {/* MAIN MENU */}
           <TouchableOpacity
-            style={[styles.btn, styles.secondaryBtn]}
+            style={[styles.btn, styles.menuBtn]}
             onPress={onMainMenu}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Ionicons name="home-outline" size={18} color="#CBD5E1" />
-            <Text style={styles.secondaryBtnText}>MAIN MENU</Text>
+            <Ionicons name="home-outline" size={17} color="#FDE68A" />
+            <Text style={styles.menuBtnText}>WEDDING HOME</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -87,76 +145,93 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     ...(StyleSheet.absoluteFill as any),
-    backgroundColor: 'rgba(3, 7, 18, 0.82)',
+    backgroundColor: 'rgba(20, 2, 8, 0.88)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
-    padding: 24,
+    padding: 20,
   },
   card: {
     width: '100%',
-    maxWidth: 340,
-    backgroundColor: '#0F172A',
-    borderRadius: 24,
+    maxWidth: 350,
+    backgroundColor: 'rgba(38, 4, 16, 0.96)',
+    borderRadius: 26,
     borderWidth: 2,
-    borderColor: '#3730A3',
-    padding: 24,
+    borderColor: '#F59E0B',
+    paddingHorizontal: 22,
+    paddingVertical: 24,
     alignItems: 'center',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.65,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  disasterEmoji: {
+    fontSize: 44,
+    marginBottom: 6,
   },
   gameOverTitle: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#EF4444',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(239, 68, 68, 0.6)',
+    color: '#FDE68A',
+    letterSpacing: 1,
+    textAlign: 'center',
+    textShadowColor: 'rgba(217, 27, 92, 0.9)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
-    marginBottom: 8,
+    textShadowRadius: 6,
+    marginBottom: 6,
+  },
+  gameOverSubtitle: {
+    color: '#CBD5E1',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 6,
   },
   newBestBadge: {
-    backgroundColor: 'rgba(234, 179, 8, 0.2)',
-    borderColor: '#EAB308',
+    backgroundColor: 'rgba(245, 158, 11, 0.22)',
+    borderColor: '#F59E0B',
     borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
     marginBottom: 16,
+    width: '100%',
   },
   newBestText: {
-    color: '#FACC15',
-    fontSize: 14,
+    color: '#FEF08A',
+    fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    textAlign: 'center',
   },
   scoreBoard: {
     width: '100%',
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
+    backgroundColor: 'rgba(18, 2, 7, 0.75)',
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: 20,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    marginBottom: 18,
   },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 3,
   },
   scoreLabel: {
-    color: '#94A3B8',
-    fontSize: 14,
+    color: '#FDE68A',
+    fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
   },
   scoreValue: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
   },
   bestValue: {
@@ -164,8 +239,8 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginVertical: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    marginVertical: 8,
   },
   buttonsContainer: {
     width: '100%',
@@ -173,35 +248,53 @@ const styles = StyleSheet.create({
   },
   btn: {
     width: '100%',
-    height: 48,
-    borderRadius: 14,
+    height: 50,
+    borderRadius: 25,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
-  playAgainBtn: {
-    backgroundColor: '#6366F1',
-    shadowColor: '#6366F1',
+  tryAgainBtn: {
+    backgroundColor: '#D91B5C',
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+    shadowColor: '#831843',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  playAgainBtnText: {
+  tryAgainBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+  customizeBtn: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#D97706',
+    shadowColor: '#78350F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  customizeBtnText: {
+    color: '#831843',
+    fontSize: 14,
     fontWeight: '800',
     letterSpacing: 1,
   },
-  secondaryBtn: {
-    backgroundColor: '#1E293B',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+  menuBtn: {
+    backgroundColor: 'rgba(20, 2, 8, 0.85)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.5)',
   },
-  secondaryBtnText: {
-    color: '#E2E8F0',
-    fontSize: 14,
+  menuBtnText: {
+    color: '#FDE68A',
+    fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1,
   },

@@ -35,7 +35,7 @@ export const PlayerFace: React.FC<PlayerFaceProps> = ({
       ]}
       pointerEvents="none"
     >
-      {/* Floating Aura / Outer Ring */}
+      {/* Floating Royal Wedding Aura / Outer Ring */}
       <View style={styles.glowRing} />
 
       {/* Pure Floating Head / Face Container */}
@@ -47,7 +47,7 @@ export const PlayerFace: React.FC<PlayerFaceProps> = ({
         />
       </View>
 
-      {/* Flap Speed Trail indicator (subtle burst, NOT wings or bird parts) */}
+      {/* Flap Speed Trail indicator (festive golden/sparkle puff) */}
       {isFlapping && <View style={styles.flapTrail} />}
     </View>
   );
@@ -64,20 +64,20 @@ const styles = StyleSheet.create({
     ...(StyleSheet.absoluteFill as any),
     borderRadius: GAME_CONSTANTS.PLAYER_DIAMETER / 2,
     borderWidth: 2.5,
-    borderColor: '#818CF8',
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    shadowColor: '#6366F1',
+    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(217, 27, 92, 0.25)',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.9,
+    shadowRadius: 10,
+    elevation: 8,
   },
   faceMask: {
     width: GAME_CONSTANTS.PLAYER_DIAMETER - 4,
     height: GAME_CONSTANTS.PLAYER_DIAMETER - 4,
     borderRadius: (GAME_CONSTANTS.PLAYER_DIAMETER - 4) / 2,
     overflow: 'hidden',
-    backgroundColor: '#1E293B',
+    backgroundColor: '#370617',
   },
   faceImage: {
     width: '100%',
@@ -86,9 +86,13 @@ const styles = StyleSheet.create({
   flapTrail: {
     position: 'absolute',
     bottom: -6,
-    width: 24,
+    width: 22,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(253, 230, 138, 0.85)',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
 });

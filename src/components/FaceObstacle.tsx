@@ -23,7 +23,7 @@ export const FaceObstacle: React.FC<FaceObstacleProps> = ({
 
   return (
     <>
-      {/* 1. TOP TOWER OF REPEATING FRIEND 2 FACES */}
+      {/* 1. TOP MANDAP PILLAR OF REPEATING ABHIKASHO FACES */}
       <View
         style={[
           styles.towerContainer,
@@ -59,11 +59,13 @@ export const FaceObstacle: React.FC<FaceObstacleProps> = ({
           ))}
         </View>
 
-        {/* Gap Capstone Lip */}
-        <View style={[styles.capstone, styles.topCapstone]} />
+        {/* Golden Brass Capstone Lip */}
+        <View style={[styles.capstone, styles.topCapstone]}>
+          <View style={styles.rubyLine} />
+        </View>
       </View>
 
-      {/* 2. BOTTOM TOWER OF REPEATING FRIEND 2 FACES */}
+      {/* 2. BOTTOM MANDAP PILLAR OF REPEATING ABHIKASHO FACES */}
       <View
         style={[
           styles.towerContainer,
@@ -77,8 +79,10 @@ export const FaceObstacle: React.FC<FaceObstacleProps> = ({
         ]}
         pointerEvents="none"
       >
-        {/* Gap Capstone Lip */}
-        <View style={[styles.capstone, styles.bottomCapstone]} />
+        {/* Golden Brass Capstone Lip */}
+        <View style={[styles.capstone, styles.bottomCapstone]}>
+          <View style={styles.rubyLine} />
+        </View>
 
         <View style={[styles.towerColumn, { height: obstacle.bottomHeight }]}>
           {Array.from({ length: bottomTilesCount }).map((_, i) => (
@@ -109,27 +113,27 @@ export const FaceObstacle: React.FC<FaceObstacleProps> = ({
 const styles = StyleSheet.create({
   towerContainer: {
     position: 'absolute',
-    backgroundColor: '#1E1B4B',
-    borderColor: '#4338CA',
+    backgroundColor: '#260410',
+    borderColor: '#F59E0B',
     borderWidth: 2,
     overflow: 'hidden',
-    shadowColor: '#000000',
+    shadowColor: '#450A0A',
     shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 0.6,
-    shadowRadius: 5,
+    shadowRadius: 6,
     elevation: 8,
     zIndex: 10,
   },
   topTower: {
     borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
     justifyContent: 'flex-end',
   },
   bottomTower: {
     borderBottomWidth: 0,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
     justifyContent: 'flex-start',
   },
   towerColumn: {
@@ -141,7 +145,7 @@ const styles = StyleSheet.create({
     marginVertical: 1,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#1E040D',
     position: 'relative',
   },
   faceTileImage: {
@@ -151,14 +155,22 @@ const styles = StyleSheet.create({
   tileBorderOverlay: {
     ...(StyleSheet.absoluteFill as any),
     borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.45)', // Red alert highlight for obstacle
+    borderColor: 'rgba(245, 158, 11, 0.45)', // Royal gold border for mandap tiles
     borderRadius: 8,
   },
   capstone: {
     width: '100%',
-    height: 8,
-    backgroundColor: '#EF4444', // Highlight danger edge of the gap
+    height: 9,
+    backgroundColor: '#F59E0B', // Golden brass capstone
     zIndex: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rubyLine: {
+    width: '80%',
+    height: 3,
+    backgroundColor: '#BE123C', // Ruby red accent on gap lip
+    borderRadius: 1.5,
   },
   topCapstone: {
     position: 'absolute',
